@@ -38,6 +38,7 @@ targets:
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         PRODUCT_BUNDLE_IDENTIFIER: com.YvianDorel.TrackerFootballBett
         INFOPLIST_KEY_CFBundleDisplayName: TrackerFootballBett
+        INFOPLIST_KEY_CFBundleIconName: AppIcon
         PRODUCT_DISPLAY_NAME: TrackerFootballBett
         CODE_SIGN_ENTITLEMENTS: Config/TrackerFootballBett.entitlements
         DEVELOPMENT_TEAM: "9D3BPD28N7"
