@@ -81,6 +81,22 @@ workflows:
             --project "$CM_BUILD_DIR/$XCODE_PROJECT" \
             --scheme "$XCODE_SCHEME"
 
+      - name: Verify app icon in IPA
+        script: |
+          set -e
+          IPA=$(ls -1 "$CM_BUILD_DIR"/build/ios/ipa/*.ipa | head -1)
+          echo "IPA=$IPA"
+          rm -rf /tmp/ipa_check && mkdir -p /tmp/ipa_check
+          unzip -q "$IPA" -d /tmp/ipa_check
+          APP=$(find /tmp/ipa_check -name "*.app" -type d | head -1)
+          echo "APP=$APP"
+          plutil -p "$APP/Info.plist" | tee /tmp/info_plist.txt
+          grep -q CFBundleIconName /tmp/info_plist.txt
+          ls -la "$APP" | head -50
+          # 120x120 loose icon OR Assets.car must exist
+          test -f "$APP/Assets.car" || test -f "$APP/AppIcon60x60@2x.png"
+          echo "Icon verification OK"
+
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log

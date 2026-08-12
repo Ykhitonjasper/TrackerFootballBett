@@ -5,58 +5,48 @@ options:
     iOS: "17.0"
   createIntermediateGroups: true
   developmentLanguage: en
+  xcodeVersion: "15.0"
 settings:
   base:
     SWIFT_VERSION: "5.9"
     TARGETED_DEVICE_FAMILY: "1"
     IPHONEOS_DEPLOYMENT_TARGET: "17.0"
-    GENERATE_INFOPLIST_FILE: YES
     MARKETING_VERSION: "1.0.0"
-    CURRENT_PROJECT_VERSION: "1"
+    CURRENT_PROJECT_VERSION: "3"
     PRODUCT_BUNDLE_IDENTIFIER: com.YvianDorel.TrackerFootballBett
     DEVELOPMENT_TEAM: "9D3BPD28N7"
     CODE_SIGN_STYLE: Automatic
-    SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: NO
-    SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: NO
-    SUPPORTS_MACCATALYST: NO
 targets:
   TrackerBet:
     type: application
     platform: iOS
+    deploymentTarget: "17.0"
     sources:
       - path: Sources
         excludes:
-          - Assets.xcassets
-          - "**/PrivacyInfo.xcprivacy"
-    resources:
-      - path: Sources/Assets.xcassets
-      - path: Sources/PrivacyInfo.xcprivacy
+          - Info.plist
+      - path: Assets.xcassets
+        buildPhase: resources
+      - path: PrivacyInfo.xcprivacy
+        buildPhase: resources
+      - path: "IconResources/AppIcon60x60@2x.png"
+        buildPhase: resources
+      - path: "IconResources/AppIcon60x60@3x.png"
+        buildPhase: resources
     settings:
       base:
         TARGETED_DEVICE_FAMILY: "1"
+        INFOPLIST_FILE: Sources/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         PRODUCT_BUNDLE_IDENTIFIER: com.YvianDorel.TrackerFootballBett
-        INFOPLIST_KEY_CFBundleDisplayName: TrackerFootballBett
-        INFOPLIST_KEY_CFBundleIconName: AppIcon
         PRODUCT_DISPLAY_NAME: TrackerFootballBett
         CODE_SIGN_ENTITLEMENTS: Config/TrackerFootballBett.entitlements
         DEVELOPMENT_TEAM: "9D3BPD28N7"
         CODE_SIGN_STYLE: Automatic
-        SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: NO
-        SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: NO
-        SUPPORTS_MACCATALYST: NO
-        GENERATE_INFOPLIST_FILE: YES
-        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
-        INFOPLIST_KEY_UILaunchScreen_Generation: YES
-        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
-        INFOPLIST_KEY_UIRequiresFullScreen: YES
-        INFOPLIST_KEY_LSRequiresIPhoneOS: YES
-        INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO
-        ENABLE_PREVIEWS: YES
-        CURRENT_PROJECT_VERSION: "1"
+        CURRENT_PROJECT_VERSION: "3"
         MARKETING_VERSION: "1.0.0"
-
 schemes:
   TrackerBet:
     build:
