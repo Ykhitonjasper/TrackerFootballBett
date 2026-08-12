@@ -45,14 +45,14 @@ enum DemoScenario {
     case firstBet
     case liveComeback
     case bankrollRebuild
-    case climbingRanks
+    case rebuildDiscipline
 
     var title: String {
         switch self {
         case .firstBet: return "First ticket"
         case .liveComeback: return "Live comeback"
         case .bankrollRebuild: return "Bankroll rebuild"
-        case .climbingRanks: return "Climb the ladder"
+        case .rebuildDiscipline: return "Steady recovery"
         }
     }
 
@@ -64,8 +64,8 @@ enum DemoScenario {
             return "When a favorite trails live, look at double chance instead of chasing long moneylines."
         case .bankrollRebuild:
             return "After a losing streak, cut stake size and favor shorter prices."
-        case .climbingRanks:
-            return "Consistency beats parlays on the weekly leaderboard."
+        case .rebuildDiscipline:
+            return "Consistency beats parlays when rebuilding after a downswing."
         }
     }
 }
@@ -75,7 +75,7 @@ enum ScenarioCoach {
         var scenarios: [DemoScenario] = []
         if pendingCount == 0 { scenarios.append(.firstBet) }
         if balance < 700 { scenarios.append(.bankrollRebuild) }
-        if netProfit < 0 { scenarios.append(.climbingRanks) }
+        if netProfit < 0 { scenarios.append(.rebuildDiscipline) }
         scenarios.append(.liveComeback)
         return scenarios
     }

@@ -58,7 +58,7 @@ struct OnboardingScreen: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 12)
 
-            Text("Track live scores, place paper bets, and climb the leaderboard — all in one demo bankroll.")
+            Text("Track live scores and place paper bets with a demo bankroll — no real money involved.")
                 .font(.body)
                 .foregroundStyle(AppTheme.textSecondary)
                 .multilineTextAlignment(.center)
@@ -66,7 +66,7 @@ struct OnboardingScreen: View {
 
             featureRow(icon: "sportscourt.fill", title: "Multi-sport feed", subtitle: "Soccer, NBA, tennis, NHL, esports")
             featureRow(icon: "bolt.fill", title: "Live simulation", subtitle: "Scores and markets evolve in real time")
-            featureRow(icon: "trophy.fill", title: "Competitive ranks", subtitle: "Weekly ladder based on your net profit")
+            featureRow(icon: "chart.bar.fill", title: "Personal stats", subtitle: "Track P/L, streaks, and ticket history")
             Spacer()
         }
     }

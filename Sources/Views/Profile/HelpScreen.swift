@@ -26,8 +26,8 @@ struct HelpScreen: View {
                     body: "Scores, minutes, and prices evolve on a timer so the feed feels alive. Featured fixtures and deeper league slates are generated from the built-in team catalog."
                 )
                 section(
-                    title: "Leaderboard",
-                    body: "Ranks are ordered by net profit. Your profile appears alongside generated rivals so you can track relative performance during a demo session."
+                    title: "Personal performance",
+                    body: "Profile shows your own win rate, net profit, streaks, and recent tickets. Stats are private to your demo session — there is no public ranking or competition with other users."
                 )
                 glossary
                 NavigationLink("Full market rules") {

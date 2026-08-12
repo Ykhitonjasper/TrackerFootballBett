@@ -59,7 +59,6 @@ struct ProfileScreen: View {
                                 StatCard(title: "Total Bets", value: "\(viewModel.totalBetsPlaced)", icon: "ticket.fill")
                                 StatCard(title: "Win Rate", value: String(format: "%.0f%%", viewModel.winRate), icon: "chart.line.uptrend.xyaxis")
                                 StatCard(title: "Net Profit", value: CurrencyFormatter.compact(from: user.netProfit), icon: "dollarsign.circle.fill", tint: user.netProfit >= 0 ? AppTheme.accent : AppTheme.danger)
-                                StatCard(title: "Rank", value: viewModel.rankLabel, icon: "trophy.fill", tint: AppTheme.warning)
                                 StatCard(title: "Best Win", value: CurrencyFormatter.compact(from: viewModel.bestWin), icon: "flame.fill", tint: .orange)
                                 StatCard(title: "Win Streak", value: "\(viewModel.currentStreak)", icon: "bolt.fill", tint: .cyan)
                                 StatCard(title: "Avg Odds", value: String(format: "%.2f", viewModel.avgOdds), icon: "number")
@@ -218,7 +217,7 @@ struct SettingsScreen: View {
 
                 Section("About") {
                     LabeledContent("Version", value: "1.0.0")
-                    LabeledContent("Build", value: "1")
+                    LabeledContent("Build", value: "4")
                     Text("TrackerFootballBett is a paper-betting simulation. No real-money gambling, deposits, or payouts.")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
@@ -250,110 +249,6 @@ struct SettingsScreen: View {
             } message: {
                 Text("Clears tickets, fixtures, watchlist and returns you to onboarding.")
             }
-        }
-    }
-}
-
-struct LeaderboardScreen: View {
-    @Environment(\.modelContext) private var context
-    @State private var viewModel = LeaderboardViewModel()
-
-    var body: some View {
-        Group {
-            switch viewModel.state {
-            case .idle, .loading:
-                ProgressView("Loading ranks…")
-            case .empty:
-                EmptyStateView(title: "No rankings", systemImage: "trophy", message: "Place bets to join the ladder.")
-            case .error(let message):
-                EmptyStateView(title: "Leaderboard error", systemImage: "exclamationmark.triangle", message: message, actionTitle: "Retry") {
-                    viewModel.load(context: context)
-                }
-            case .loaded(let entries):
-                List {
-                    if let mine = viewModel.userRank {
-                        Section("Your position") {
-                            LeaderboardRow(entry: mine, highlight: true)
-                        }
-                    }
-                    Section("Weekly ladder") {
-                        ForEach(entries) { entry in
-                            LeaderboardRow(entry: entry, highlight: entry.isCurrentUser)
-                        }
-                    }
-                }
-                .listStyle(.insetGrouped)
-                .refreshable { viewModel.load(context: context) }
-            }
-        }
-        .screenBackground()
-        .navigationTitle("Leaderboard")
-        .task { viewModel.load(context: context) }
-        .onReceive(NotificationCenter.default.publisher(for: .trackerBetSettled)) { _ in
-            viewModel.load(context: context)
-        }
-    }
-}
-
-struct LeaderboardRow: View {
-    let entry: LeaderboardEntry
-    var highlight: Bool = false
-
-    var body: some View {
-        HStack(spacing: 12) {
-            Text(rankText)
-                .font(.headline.monospacedDigit())
-                .foregroundStyle(rankColor)
-                .frame(width: 36, alignment: .leading)
-
-            Circle()
-                .fill(entry.color.gradient)
-                .frame(width: 36, height: 36)
-                .overlay(
-                    Text(String(entry.username.prefix(1)).uppercased())
-                        .font(.subheadline.bold())
-                        .foregroundStyle(.white)
-                )
-
-            VStack(alignment: .leading, spacing: 2) {
-                HStack {
-                    Text(entry.username)
-                        .font(.subheadline.weight(.semibold))
-                    if entry.isCurrentUser {
-                        Text("YOU")
-                            .font(.caption2.bold())
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(AppTheme.accentMuted)
-                            .foregroundStyle(AppTheme.accent)
-                            .clipShape(Capsule())
-                    }
-                }
-                Text("\(entry.totalBets) bets · \(Int(entry.winRate * 100))% WR")
-                    .font(.caption2)
-                    .foregroundStyle(AppTheme.textSecondary)
-            }
-
-            Spacer()
-
-            Text("\(entry.points)")
-                .font(.headline.monospacedDigit())
-                .foregroundStyle(entry.points >= 0 ? AppTheme.accent : AppTheme.danger)
-        }
-        .padding(.vertical, 4)
-        .listRowBackground(highlight ? AppTheme.accent.opacity(0.08) : nil)
-    }
-
-    private var rankText: String {
-        "#\(entry.rank)"
-    }
-
-    private var rankColor: Color {
-        switch entry.rank {
-        case 1: return .yellow
-        case 2: return .gray
-        case 3: return .orange
-        default: return AppTheme.textSecondary
         }
     }
 }

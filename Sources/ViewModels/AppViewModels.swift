@@ -210,13 +210,11 @@ final class ProfileViewModel {
     var avgOdds: Double = 0
     var bestWin: Double = 0
     var currentStreak: Int = 0
-    var rankLabel: String = "—"
     var dashboard: DashboardData?
     var recentTickets: [Bet] = []
 
     private let users = UserRepository()
     private let bets = BetRepository()
-    private let leaderboard = LeaderboardService()
 
     func load(context: ModelContext) {
         state = .loading
@@ -236,11 +234,6 @@ final class ProfileViewModel {
                 snapshot: PerformanceAnalytics.snapshot(from: allBets),
                 series: PerformanceAnalytics.profitSeries(from: allBets)
             )
-
-            if let entries = try? leaderboard.build(context: context),
-               let mine = entries.first(where: { $0.isCurrentUser }) {
-                rankLabel = "#\(mine.rank)"
-            }
 
             state = .loaded(profile)
         } catch {
@@ -270,26 +263,6 @@ final class ProfileViewModel {
             }
         }
         return streak
-    }
-}
-
-@Observable
-@MainActor
-final class LeaderboardViewModel {
-    var state: ViewState<[LeaderboardEntry]> = .idle
-    var userRank: LeaderboardEntry?
-
-    private let service = LeaderboardService()
-
-    func load(context: ModelContext) {
-        state = .loading
-        do {
-            let entries = try service.build(context: context)
-            userRank = entries.first(where: \.isCurrentUser)
-            state = entries.isEmpty ? .empty : .loaded(entries)
-        } catch {
-            state = .error(error.localizedDescription)
-        }
     }
 }
 

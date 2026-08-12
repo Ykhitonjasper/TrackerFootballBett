@@ -165,30 +165,3 @@ struct MatchQuickActions: View {
 #Preview("Help") {
     NavigationStack { HelpScreen() }
 }
-
-#Preview("Leaderboard row") {
-    List {
-        LeaderboardRow(
-            entry: LeaderboardEntry(
-                username: "SharpSally",
-                points: 1280,
-                rank: 2,
-                avatarColor: "#3498DB",
-                winRate: 0.61,
-                totalBets: 84,
-                isCurrentUser: false
-            )
-        )
-        LeaderboardRow(
-            entry: LeaderboardEntry(
-                username: "You",
-                points: 240,
-                rank: 8,
-                winRate: 0.5,
-                totalBets: 12,
-                isCurrentUser: true
-            ),
-            highlight: true
-        )
-    }
-}

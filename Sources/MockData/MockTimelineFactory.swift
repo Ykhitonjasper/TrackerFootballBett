@@ -1,47 +1,5 @@
 import Foundation
 
-enum MockLeaderboardFactory {
-    private static let botNames = [
-        "OddsOracle", "ParlayKing", "SharpSally", "BankrollBoss", "ValueHunter",
-        "LiveWireBet", "GoalRush", "ClutchCaller", "EdgeFinder", "LockOfDay",
-        "StatSensei", "BetArchitect", "CashoutChris", "UnitMaster", "FadeThePublic",
-        "SteamChaser", "PropWizard", "LineShopper", "MidnightWhale", "GreenTicket",
-        "OverUnderAce", "HomeDogHero", "RoadRunnerBets", "CleanSheet", "HatTrickHarry",
-        "BuzzerBeater", "ThirdPeriod", "AceServe", "GrandSlamGabe", "PowerPlayPat",
-        "FirstBlood", "EcoRound", "BaronSteal", "RoshanRush", "ClutchAWP",
-        "VarianceVan", "EVExplorer", "KellyCriterion", "ClosingLine", "SteamMove"
-    ]
-
-    private static let colors = [
-        "#1475E1", "#1A8CFF", "#0D47A1", "#29B6F6", "#FDB913",
-        "#1565C0", "#42A5F5", "#0277BD", "#FFCA28", "#0D47A1",
-        "#039BE5", "#1976D2", "#64B5F6", "#FFB300", "#01579B"
-    ]
-
-    static func generateMockEntries(count: Int = 24) -> [LeaderboardEntry] {
-        var entries: [LeaderboardEntry] = []
-        for index in 0..<count {
-            let name = botNames[index % botNames.count]
-            let suffix = index >= botNames.count ? "\(index)" : ""
-            let points = max(40, 2400 - index * Int.random(in: 55...95) + Int.random(in: -40...40))
-            let winRate = Double.random(in: 0.38...0.72)
-            let totalBets = Int.random(in: 18...220)
-            entries.append(
-                LeaderboardEntry(
-                    username: name + suffix,
-                    points: points,
-                    rank: index + 1,
-                    avatarColor: colors[index % colors.count],
-                    winRate: winRate,
-                    totalBets: totalBets,
-                    isCurrentUser: false
-                )
-            )
-        }
-        return entries
-    }
-}
-
 enum MockTimelineFactory {
     static func events(for match: Match) -> [TimelineEvent] {
         switch match.sport {
@@ -178,35 +136,5 @@ enum MockTimelineFactory {
             safety += 1
         }
         return set.sorted()
-    }
-}
-
-enum MockStatsFactory {
-    static func stats(for match: Match) -> MatchStats {
-        let homeBias = Double(match.homeScore + 1) / Double(match.totalGoals + 2)
-        let possessionHome = Int((38 + homeBias * 24 + Double.random(in: -4...4)).rounded())
-        let possession = min(68, max(32, possessionHome))
-
-        let shotsHome = max(match.homeScore, Int.random(in: 3...16))
-        let shotsAway = max(match.awayScore, Int.random(in: 3...16))
-
-        return MatchStats(
-            possessionHome: possession,
-            possessionAway: 100 - possession,
-            shotsHome: shotsHome,
-            shotsAway: shotsAway,
-            shotsOnTargetHome: min(shotsHome, match.homeScore + Int.random(in: 1...5)),
-            shotsOnTargetAway: min(shotsAway, match.awayScore + Int.random(in: 1...5)),
-            cornersHome: Int.random(in: 1...10),
-            cornersAway: Int.random(in: 1...10),
-            foulsHome: Int.random(in: 4...18),
-            foulsAway: Int.random(in: 4...18),
-            yellowCardsHome: Int.random(in: 0...4),
-            yellowCardsAway: Int.random(in: 0...4),
-            redCardsHome: Int.random(in: 0...1),
-            redCardsAway: Int.random(in: 0...1),
-            passesHome: Int.random(in: 220...620),
-            passesAway: Int.random(in: 220...620)
-        )
     }
 }

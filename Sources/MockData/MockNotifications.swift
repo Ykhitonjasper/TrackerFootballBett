@@ -39,13 +39,6 @@ enum MockNotificationFactory {
                 isRead: true
             ),
             AppNotification(
-                title: "Leaderboard movement",
-                body: "You climbed after recent settlements. Open Ranks to compare.",
-                date: Date().addingTimeInterval(-7_200),
-                kind: .promo,
-                isRead: true
-            ),
-            AppNotification(
                 title: "Watchlist tip",
                 body: "Starred fixtures are saved under Profile → Watchlist.",
                 date: Date().addingTimeInterval(-9_000),

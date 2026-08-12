@@ -19,15 +19,9 @@ struct ContentView: View {
                     .tabItem { Label("My Bets", systemImage: "ticket.fill") }
                     .tag(1)
 
-                NavigationStack {
-                    LeaderboardScreen()
-                }
-                .tabItem { Label("Ranks", systemImage: "trophy.fill") }
-                .tag(2)
-
                 ProfileScreen()
                     .tabItem { Label("Profile", systemImage: "person.crop.circle.fill") }
-                    .tag(3)
+                    .tag(2)
             }
             .tint(AppTheme.accent)
 

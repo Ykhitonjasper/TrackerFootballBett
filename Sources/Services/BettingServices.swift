@@ -237,44 +237,6 @@ final class LiveMatchSimulator {
 }
 
 @MainActor
-final class LeaderboardService {
-    func build(context: ModelContext) throws -> [LeaderboardEntry] {
-        let profile = try UserRepository().fetchProfile(context: context)
-        let bets = try BetRepository().fetchAll(context: context)
-        let settled = bets.filter { $0.outcome.isSettled && $0.outcome != .void }
-        let wins = settled.filter { $0.outcome == .won }.count
-        let winRate = settled.isEmpty ? 0 : Double(wins) / Double(settled.count)
-
-        let userEntry = LeaderboardEntry(
-            username: profile.username,
-            points: Int(profile.netProfit.rounded()),
-            rank: 0,
-            avatarColor: "#1475E1",
-            winRate: winRate,
-            totalBets: profile.totalBetsPlaced,
-            isCurrentUser: true
-        )
-
-        var entries = MockLeaderboardFactory.generateMockEntries()
-        entries.append(userEntry)
-        entries.sort { $0.points > $1.points }
-
-        return entries.enumerated().map { index, entry in
-            LeaderboardEntry(
-                id: entry.id,
-                username: entry.username,
-                points: entry.points,
-                rank: index + 1,
-                avatarColor: entry.avatarColor,
-                winRate: entry.winRate,
-                totalBets: entry.totalBets,
-                isCurrentUser: entry.isCurrentUser
-            )
-        }
-    }
-}
-
-@MainActor
 final class NotificationService: ObservableObject {
     static let shared = NotificationService()
 

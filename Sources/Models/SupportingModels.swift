@@ -1,41 +1,6 @@
 import Foundation
 import SwiftUI
 
-struct LeaderboardEntry: Identifiable, Hashable {
-    let id: UUID
-    let username: String
-    let points: Int
-    let rank: Int
-    let avatarColor: String
-    let winRate: Double
-    let totalBets: Int
-    let isCurrentUser: Bool
-
-    init(
-        id: UUID = UUID(),
-        username: String,
-        points: Int,
-        rank: Int,
-        avatarColor: String = "#1475E1",
-        winRate: Double = 0.5,
-        totalBets: Int = 0,
-        isCurrentUser: Bool = false
-    ) {
-        self.id = id
-        self.username = username
-        self.points = points
-        self.rank = rank
-        self.avatarColor = avatarColor
-        self.winRate = winRate
-        self.totalBets = totalBets
-        self.isCurrentUser = isCurrentUser
-    }
-
-    var color: Color {
-        Color(hex: avatarColor) ?? AppTheme.accent
-    }
-}
-
 struct TimelineEvent: Identifiable, Hashable {
     let id: UUID
     let minute: Int

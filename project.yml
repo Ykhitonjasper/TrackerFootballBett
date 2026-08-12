@@ -12,7 +12,7 @@ settings:
     TARGETED_DEVICE_FAMILY: "1"
     IPHONEOS_DEPLOYMENT_TARGET: "17.0"
     MARKETING_VERSION: "1.0.0"
-    CURRENT_PROJECT_VERSION: "3"
+    CURRENT_PROJECT_VERSION: "4"
     PRODUCT_BUNDLE_IDENTIFIER: com.YvianDorel.TrackerFootballBett
     DEVELOPMENT_TEAM: "9D3BPD28N7"
     CODE_SIGN_STYLE: Automatic
@@ -45,7 +45,7 @@ targets:
         CODE_SIGN_ENTITLEMENTS: Config/TrackerFootballBett.entitlements
         DEVELOPMENT_TEAM: "9D3BPD28N7"
         CODE_SIGN_STYLE: Automatic
-        CURRENT_PROJECT_VERSION: "3"
+        CURRENT_PROJECT_VERSION: "4"
         MARKETING_VERSION: "1.0.0"
 schemes:
   TrackerBet:
