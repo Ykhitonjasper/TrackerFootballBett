@@ -1,0 +1,33 @@
+# macOS
+.DS_Store
+
+# Xcode
+xcuserdata/
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+timeline.xctimeline
+playground.xcworkspace
+
+# Build
+build/
+.build/
+.derivedData/
+DerivedData/
+
+# SwiftPM
+.swiftpm/
+Packages/**/.swiftpm/
+
+# Secrets / signing — never commit (fill in Codemagic UI)
+*.p8
+*.p12
+*.mobileprovision
+dist.key
+AuthKey_*.p8
+GoogleService-Info.plist
+
+# Local stub pipeline artifacts
+OUTPUTS/
+*.log
