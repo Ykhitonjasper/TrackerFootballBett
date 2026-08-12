@@ -71,7 +71,7 @@ struct ProfileScreen: View {
                             } label: {
                                 HStack {
                                     Image(systemName: "questionmark.circle.fill")
-                                    Text("How Tracker Football Bett works")
+                                    Text("How TrackerFootballBett works")
                                         .fontWeight(.semibold)
                                     Spacer()
                                     Image(systemName: "chevron.right")
@@ -219,7 +219,7 @@ struct SettingsScreen: View {
                 Section("About") {
                     LabeledContent("Version", value: "1.0.0")
                     LabeledContent("Build", value: "1")
-                    Text("Tracker Football Bett is a paper-betting simulation. No real-money gambling, deposits, or payouts.")
+                    Text("TrackerFootballBett is a paper-betting simulation. No real-money gambling, deposits, or payouts.")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }

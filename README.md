@@ -1,4 +1,4 @@
-# Tracker Football Bett
+# TrackerFootballBett
 
 iOS SwiftUI paper-betting / match tracker stub.
 
@@ -18,8 +18,9 @@ open TrackerBet.xcodeproj
 
 ## Codemagic
 
-Push to `main` triggers **App Store Release** (same credential group as [LaJugada](https://github.com/Ykhitonjasper/LaJugada)):
+Push to `main` triggers **App Store Release**:
 
-- Bundle ID: `com.EliasLeonelGonzalez.TrackerFootballBett`
+- App name: `TrackerFootballBett`
+- Bundle ID: `com.YvianDorel.TrackerFootballBett`
 - Scheme: `TrackerBet`
 - Group: `app_store_credentials`

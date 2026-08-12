@@ -7,7 +7,7 @@ struct HelpScreen: View {
                 intro
                 section(
                     title: "Paper bankroll",
-                    body: "Tracker Football Bett starts you with $1,000 in demo funds. Wins and losses update this balance only. There is no real-money wagering, deposits, or withdrawals."
+                    body: "TrackerFootballBett starts you with $1,000 in demo funds. Wins and losses update this balance only. There is no real-money wagering, deposits, or withdrawals."
                 )
                 section(
                     title: "Placing a bet",
@@ -47,7 +47,7 @@ struct HelpScreen: View {
 
     private var intro: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("How Tracker Football Bett works")
+            Text("How TrackerFootballBett works")
                 .font(.title2.bold())
             Text("A compact sports tracking and paper-betting sandbox for exploring markets, tickets, and performance stats.")
                 .foregroundStyle(AppTheme.textSecondary)

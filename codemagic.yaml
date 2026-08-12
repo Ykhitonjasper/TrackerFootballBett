@@ -11,7 +11,7 @@ workflows:
       vars:
         XCODE_PROJECT: TrackerBet.xcodeproj
         XCODE_SCHEME: TrackerBet
-        BUNDLE_ID: com.EliasLeonelGonzalez.TrackerFootballBett
+        BUNDLE_ID: com.YvianDorel.TrackerFootballBett
 
     triggering:
       events:

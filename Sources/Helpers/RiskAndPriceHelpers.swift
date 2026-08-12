@@ -98,7 +98,7 @@ enum SearchSuggestions {
 }
 
 enum AppCopy {
-    static let disclaimer = "Tracker Football Bett is a paper-betting product demo. It does not offer real-money gambling."
+    static let disclaimer = "TrackerFootballBett is a paper-betting product demo. It does not offer real-money gambling."
     static let resetWarning = "Resetting clears tickets and restores the starter bankroll and fixture slate."
     static let liveHint = "Live markets update on a short timer. Settlement runs when fixtures finish."
     static let watchlistHint = "Star fixtures to revisit them quickly from Profile → Watchlist."

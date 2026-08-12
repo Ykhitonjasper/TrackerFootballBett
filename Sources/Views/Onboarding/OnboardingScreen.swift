@@ -53,7 +53,7 @@ struct OnboardingScreen: View {
                 .scaleEffect(appear ? 1 : 0.8)
                 .opacity(appear ? 1 : 0)
 
-            Text("Tracker Football Bett")
+            Text("TrackerFootballBett")
                 .font(.system(size: 32, weight: .bold, design: .rounded))
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 12)
