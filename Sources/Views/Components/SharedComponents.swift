@@ -162,16 +162,29 @@ struct EmptyStateView: View {
     var action: (() -> Void)? = nil
 
     var body: some View {
-        ContentUnavailableView {
-            Label(title, systemImage: systemImage)
-        } description: {
+        VStack(spacing: 16) {
+            Image(systemName: systemImage)
+                .font(.system(size: 48))
+                .foregroundStyle(AppTheme.accentBright)
+                .symbolRenderingMode(.hierarchical)
+
+            Text(title)
+                .font(.title3.bold())
+                .foregroundStyle(AppTheme.textPrimary)
+                .multilineTextAlignment(.center)
+
             Text(message)
-        } actions: {
+                .font(.subheadline)
+                .foregroundStyle(AppTheme.textSecondary)
+                .multilineTextAlignment(.center)
+
             if let actionTitle, let action {
                 Button(actionTitle, action: action)
                     .buttonStyle(SecondaryButtonStyle())
             }
         }
+        .padding(32)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 

@@ -192,7 +192,9 @@ struct WatchlistScreen: View {
                 ScrollView {
                     LazyVStack(spacing: 8) {
                         ForEach(matches) { match in
-                            NavigationLink(value: match) {
+                            NavigationLink {
+                                MatchDetailScreen(match: match)
+                            } label: {
                                 MatchCard(match: match)
                             }
                             .buttonStyle(.plain)
@@ -204,7 +206,7 @@ struct WatchlistScreen: View {
         }
         .screenBackground()
         .navigationTitle("Watchlist")
-        .navigationDestination(for: Match.self) { MatchDetailScreen(match: $0) }
+        .navigationBarTitleDisplayMode(.large)
         .task { reload() }
         .onReceive(NotificationCenter.default.publisher(for: .trackerBetDataReset)) { _ in reload() }
     }
