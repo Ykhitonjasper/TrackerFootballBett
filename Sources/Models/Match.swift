@@ -11,17 +11,14 @@ final class Match {
     var date: Date
     var sportRaw: String
     var statusRaw: String
-    var homeOdds: Double
-    var awayOdds: Double
-    var drawOdds: Double?
     var league: String
     var venue: String
     var minute: Int
     var isFeatured: Bool
     var popularity: Int
 
-    @Relationship(deleteRule: .cascade, inverse: \Bet.match)
-    var bets: [Bet]? = []
+    @Relationship(deleteRule: .cascade, inverse: \MatchPick.match)
+    var picks: [MatchPick]? = []
 
     var sport: Sport {
         get { Sport(rawValue: sportRaw) ?? .soccer }
@@ -65,9 +62,6 @@ final class Match {
         date: Date,
         sport: Sport,
         status: MatchStatus,
-        homeOdds: Double,
-        awayOdds: Double,
-        drawOdds: Double? = nil,
         homeScore: Int = 0,
         awayScore: Int = 0,
         league: String = "",
@@ -82,9 +76,6 @@ final class Match {
         self.date = date
         self.sportRaw = sport.rawValue
         self.statusRaw = status.rawValue
-        self.homeOdds = homeOdds
-        self.awayOdds = awayOdds
-        self.drawOdds = drawOdds
         self.homeScore = homeScore
         self.awayScore = awayScore
         self.league = league
@@ -94,16 +85,7 @@ final class Match {
         self.popularity = popularity
     }
 
-    func odds(for type: BetType) -> Double {
-        switch type {
-        case .homeWin: return homeOdds
-        case .awayWin: return awayOdds
-        case .draw: return drawOdds ?? 3.2
-        case .over: return max(1.55, min(2.8, 2.4 - Double(totalGoals) * 0.15))
-        case .under: return max(1.55, min(2.8, 1.7 + Double(totalGoals) * 0.12))
-        case .bothTeamsScore: return homeScore > 0 && awayScore > 0 ? 1.65 : 1.95
-        case .homeOrDraw: return OddsCalculator.combine(homeOdds, drawOdds ?? 3.2)
-        case .awayOrDraw: return OddsCalculator.combine(awayOdds, drawOdds ?? 3.2)
-        }
+    var primaryPick: MatchPick? {
+        picks?.sorted { $0.confidence > $1.confidence }.first
     }
 }

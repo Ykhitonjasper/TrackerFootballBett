@@ -75,25 +75,3 @@ enum FixtureDensity {
         return "\(live) live · \(upcoming) upcoming · \(finished) finished"
     }
 }
-
-enum XPRules {
-    static let placeBet = 5
-    static let winBet = 20
-    static let loseBet = 2
-    static let cashOut = 3
-    static let dailyOpen = 1
-
-    static func title(for level: Int) -> String {
-        switch level {
-        case ...2: return "Rookie"
-        case 3...5: return "Regular"
-        case 6...9: return "Sharp"
-        case 10...14: return "Pro"
-        default: return "Legend"
-        }
-    }
-
-    static func xpNeeded(for level: Int) -> Int {
-        max(100, level * 100)
-    }
-}

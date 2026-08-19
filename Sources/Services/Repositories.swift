@@ -5,36 +5,47 @@ import SwiftData
 final class SeedService {
     static let shared = SeedService()
 
-    private let seededKey = "trackerbet.didSeed.v3"
+    private let seededKey = "trackerbet.didSeed.v7"
 
     func seedIfNeeded(context: ModelContext) {
         let alreadySeeded = UserDefaults.standard.bool(forKey: seededKey)
         let matchCount = (try? context.fetchCount(FetchDescriptor<Match>())) ?? 0
 
         if !alreadySeeded || matchCount == 0 {
-            clearBets(context: context)
             clearMatches(context: context)
             MockMatchFactory.seedMatches(into: context)
-            let profile = ensureProfile(context: context)
-            MockBetFactory.seedDemoBets(into: context, profile: profile)
+            MockPickFactory.seedPicks(into: context)
+            _ = ensureProfile(context: context)
+            seedWatchlist(context: context)
             try? context.save()
             UserDefaults.standard.set(true, forKey: seededKey)
         } else {
-            let profile = ensureProfile(context: context)
-            MockBetFactory.seedDemoBets(into: context, profile: profile)
+            _ = ensureProfile(context: context)
         }
     }
 
-    func resetDemoData(context: ModelContext) {
-        clearBets(context: context)
+    func resetLocalData(context: ModelContext) {
         clearMatches(context: context)
         clearProfiles(context: context)
         MockMatchFactory.seedMatches(into: context)
-        let profile = ensureProfile(context: context, forceDefault: true)
-        MockBetFactory.seedDemoBets(into: context, profile: profile)
+        MockPickFactory.seedPicks(into: context)
+        _ = ensureProfile(context: context, forceDefault: true)
+        seedWatchlist(context: context, force: true)
         try? context.save()
         UserDefaults.standard.set(true, forKey: seededKey)
         NotificationCenter.default.post(name: .trackerBetDataReset, object: nil)
+    }
+
+    private func seedWatchlist(context: ModelContext, force: Bool = false) {
+        if !force && !WatchlistStore.load().isEmpty { return }
+        let matches = (try? context.fetch(FetchDescriptor<Match>())) ?? []
+        let ids = Set(
+            matches
+                .filter { $0.isFeatured || $0.status == .live }
+                .prefix(8)
+                .map(\.id)
+        )
+        WatchlistStore.save(ids)
     }
 
     @discardableResult
@@ -45,8 +56,7 @@ final class SeedService {
         }
         if forceDefault || profiles.isEmpty {
             let profile = UserProfile(
-                balance: 1000,
-                username: "PlayerOne",
+                displayName: "Fan",
                 favoriteSport: .soccer
             )
             context.insert(profile)
@@ -60,11 +70,6 @@ final class SeedService {
         matches.forEach { context.delete($0) }
     }
 
-    private func clearBets(context: ModelContext) {
-        let bets = (try? context.fetch(FetchDescriptor<Bet>())) ?? []
-        bets.forEach { context.delete($0) }
-    }
-
     private func clearProfiles(context: ModelContext) {
         let profiles = (try? context.fetch(FetchDescriptor<UserProfile>())) ?? []
         profiles.forEach { context.delete($0) }
@@ -73,8 +78,6 @@ final class SeedService {
 
 extension Notification.Name {
     static let trackerBetDataReset = Notification.Name("trackerBetDataReset")
-    static let trackerBetBetPlaced = Notification.Name("trackerBetBetPlaced")
-    static let trackerBetSettled = Notification.Name("trackerBetSettled")
 }
 
 @MainActor
@@ -124,12 +127,10 @@ final class MatchRepository {
         switch sort {
         case .kickoff:
             matches.sort { $0.date < $1.date }
-        case .oddsLow:
-            matches.sort { $0.homeOdds < $1.homeOdds }
-        case .oddsHigh:
-            matches.sort { $0.homeOdds > $1.homeOdds }
         case .popularity:
             matches.sort { $0.popularity > $1.popularity }
+        case .league:
+            matches.sort { $0.league < $1.league }
         }
 
         return matches
@@ -137,19 +138,7 @@ final class MatchRepository {
 
     func featured(context: ModelContext) throws -> [Match] {
         try fetchAll(context: context)
-            .filter { $0.isFeatured && $0.status.isBettable }
+            .filter { $0.isFeatured && $0.status.isActive }
             .sorted { $0.popularity > $1.popularity }
-    }
-}
-
-@MainActor
-final class BetRepository {
-    func fetchAll(context: ModelContext) throws -> [Bet] {
-        let descriptor = FetchDescriptor<Bet>(sortBy: [SortDescriptor(\.datePlaced, order: .reverse)])
-        return try context.fetch(descriptor)
-    }
-
-    func fetchPending(context: ModelContext) throws -> [Bet] {
-        try fetchAll(context: context).filter { $0.outcome == .pending }
     }
 }

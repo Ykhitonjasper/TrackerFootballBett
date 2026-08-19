@@ -5,7 +5,6 @@ struct MatchDetailScreen: View {
     @Environment(\.modelContext) private var context
     @State private var viewModel: MatchDetailViewModel
     @State private var showStats = false
-    @State private var showPlaceBet = false
     @State private var isWatched = false
 
     init(match: Match) {
@@ -16,10 +15,12 @@ struct MatchDetailScreen: View {
         ScrollView {
             VStack(spacing: 20) {
                 scoreboard
-                marketSection
+                OneXTwoBoard(match: viewModel.match)
+                ForEach(viewModel.match.picks ?? []) { pick in
+                    PickCard(pick: pick)
+                }
+                FormPreviewCard(match: viewModel.match)
                 InsightsCard(match: viewModel.match)
-                ImpliedProbabilityBar(cells: OddsBoardBuilder.board(for: viewModel.match))
-                PriceMovementChart(ticks: PriceMovementSimulator.series(for: viewModel.match))
                 timelineSection
                 infoSection
             }
@@ -50,12 +51,6 @@ struct MatchDetailScreen: View {
         .sheet(isPresented: $showStats) {
             MatchStatsSheet(match: viewModel.match, stats: viewModel.stats)
                 .presentationDetents([.medium, .large])
-        }
-        .sheet(isPresented: $showPlaceBet) {
-            if let type = viewModel.selectedBetType {
-                PlaceBetSheet(match: viewModel.match, betType: type)
-                    .presentationDetents([.medium, .large])
-            }
         }
         .onAppear {
             viewModel.reloadDerived()
@@ -105,32 +100,6 @@ struct MatchDetailScreen: View {
         }
     }
 
-    private var marketSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            SectionHeader(title: "Markets", subtitle: viewModel.match.status.isBettable ? "Tap a price to open the bet slip" : "Betting closed")
-
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
-                ForEach(viewModel.markets) { type in
-                    Button {
-                        viewModel.select(type)
-                        if viewModel.match.status.isBettable {
-                            showPlaceBet = true
-                        }
-                    } label: {
-                        OddsButton(
-                            title: type.shortCode,
-                            price: viewModel.odds(for: type),
-                            isSelected: viewModel.selectedBetType == type,
-                            isEnabled: viewModel.match.status.isBettable
-                        )
-                    }
-                    .buttonStyle(.plain)
-                    .disabled(!viewModel.match.status.isBettable)
-                }
-            }
-        }
-    }
-
     private var timelineSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             SectionHeader(title: "Timeline", subtitle: "Key moments")
@@ -172,6 +141,101 @@ struct MatchDetailScreen: View {
             Text(value).fontWeight(.semibold)
         }
         .font(.subheadline)
+    }
+}
+
+struct OneXTwoBoard: View {
+    let match: Match
+
+    var body: some View {
+        let selected = match.primaryPick
+        VStack(alignment: .leading, spacing: 10) {
+            SectionHeader(title: "Result board", subtitle: "Highlighted forecast — for personal notes only")
+            HStack(spacing: 8) {
+                cell("1", match.homeTeam, on: selected?.market == .oneXTwo && selected?.lean == .home)
+                if match.sport.allowsDraw {
+                    cell("X", "Draw", on: selected?.market == .oneXTwo && selected?.lean == .draw)
+                }
+                cell("2", match.awayTeam, on: selected?.market == .oneXTwo && selected?.lean == .away)
+            }
+            if let pick = selected, pick.market != .oneXTwo {
+                Text("Also noted: \(pick.selectionLabel)")
+                    .font(.caption)
+                    .foregroundStyle(AppTheme.textSecondary)
+            }
+        }
+        .padding(14)
+        .cardStyle()
+    }
+
+    private func cell(_ code: String, _ caption: String, on: Bool) -> some View {
+        VStack(spacing: 6) {
+            Text(code)
+                .font(.title2.weight(.bold).monospaced())
+            Text(caption)
+                .font(.caption2)
+                .lineLimit(2)
+                .multilineTextAlignment(.center)
+        }
+        .foregroundStyle(on ? .white : AppTheme.textSecondary)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 12)
+        .background(on ? AppTheme.accent : AppTheme.surfaceElevated)
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+}
+
+struct FormPreviewCard: View {
+    let match: Match
+
+    var body: some View {
+        let preview = MatchPreviewFactory.preview(for: match)
+        VStack(alignment: .leading, spacing: 12) {
+            SectionHeader(title: "Form & H2H", subtitle: "Last five plus recent meetings")
+            formRow(match.homeTeam, preview.home)
+            formRow(match.awayTeam, preview.away)
+            HStack {
+                mini("Home H2H", "\(preview.homeWins)")
+                mini("Draws", "\(preview.draws)")
+                mini("Away H2H", "\(preview.awayWins)")
+            }
+            Text(preview.note)
+                .font(.caption)
+                .foregroundStyle(AppTheme.textSecondary)
+        }
+        .padding(14)
+        .cardStyle()
+    }
+
+    private func formRow(_ name: String, _ row: MatchPreviewFactory.FormRow) -> some View {
+        HStack {
+            Text(name)
+                .font(.caption.weight(.semibold))
+                .frame(maxWidth: .infinity, alignment: .leading)
+            HStack(spacing: 4) {
+                ForEach(Array(row.lastFive.enumerated()), id: \.offset) { _, token in
+                    Text(token)
+                        .font(.caption2.weight(.bold))
+                        .frame(width: 18, height: 18)
+                        .background(token == "W" ? AppTheme.success.opacity(0.3) : token == "L" ? AppTheme.danger.opacity(0.3) : AppTheme.surfaceElevated)
+                        .clipShape(Circle())
+                }
+            }
+            Text("\(row.scored):\(row.conceded)")
+                .font(.caption.monospacedDigit())
+                .foregroundStyle(AppTheme.textTertiary)
+        }
+    }
+
+    private func mini(_ title: String, _ value: String) -> some View {
+        VStack(spacing: 4) {
+            Text(value).font(.headline.monospacedDigit())
+            Text(title).font(.caption2).foregroundStyle(AppTheme.textSecondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 8)
+        .background(AppTheme.surfaceElevated)
+        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 }
 

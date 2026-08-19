@@ -30,4 +30,6 @@ GoogleService-Info.plist
 
 # Local stub pipeline artifacts
 OUTPUTS/
+.a2ui-legacy/
+Site/.wrangler/
 *.log

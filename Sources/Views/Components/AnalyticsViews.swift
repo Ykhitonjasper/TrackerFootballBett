@@ -9,7 +9,7 @@ struct InsightsCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            SectionHeader(title: "Insights", subtitle: "Demo analysis from live prices")
+            SectionHeader(title: "Match notes", subtitle: "Scoreboard context for this fixture")
             ForEach(insights) { insight in
                 HStack(alignment: .top, spacing: 10) {
                     Circle()
@@ -39,31 +39,29 @@ struct InsightsCard: View {
     }
 }
 
-struct PerformanceDashboard: View {
-    let snapshot: PerformanceAnalytics.Snapshot
-    let series: [(date: Date, profit: Double)]
+struct FollowDashboard: View {
+    let snapshot: FollowAnalytics.Snapshot
+    let series: [(date: Date, count: Int)]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            SectionHeader(title: "Performance", subtitle: "Paper bankroll analytics")
+            SectionHeader(title: "Your journal", subtitle: "Predictions and fixtures on this device")
 
             HStack(spacing: 10) {
-                miniStat("ROI", String(format: "%.0f%%", snapshot.roi * 100), snapshot.roi >= 0 ? AppTheme.accent : AppTheme.danger)
-                miniStat("Avg stake", CurrencyFormatter.compact(from: snapshot.averageStake), AppTheme.info)
-                miniStat("Pending", "\(snapshot.pendingCount)", AppTheme.warning)
+                miniStat("Live", "\(snapshot.liveCount)", AppTheme.danger)
+                miniStat("Soon", "\(snapshot.upcomingCount)", AppTheme.info)
+                miniStat("Watching", "\(snapshot.watchedCount)", AppTheme.warning)
             }
 
             if series.count > 1 {
                 GeometryReader { geo in
-                    let values = series.map(\.profit)
-                    let minV = (values.min() ?? 0) - 1
-                    let maxV = (values.max() ?? 0) + 1
-                    let range = max(maxV - minV, 1)
+                    let values = series.map(\.count)
+                    let maxV = max(values.max() ?? 1, 1)
 
                     Path { path in
                         for (index, point) in series.enumerated() {
                             let x = geo.size.width * CGFloat(index) / CGFloat(max(series.count - 1, 1))
-                            let y = geo.size.height * (1 - CGFloat((point.profit - minV) / range))
+                            let y = geo.size.height * (1 - CGFloat(Double(point.count) / Double(maxV)))
                             if index == 0 {
                                 path.move(to: CGPoint(x: x, y: y))
                             } else {
@@ -77,16 +75,14 @@ struct PerformanceDashboard: View {
                 .padding(.vertical, 4)
             }
 
-            if let sport = snapshot.bestSport {
-                Text("Best sport: \(sport.rawValue)")
+            if let sport = snapshot.topSport {
+                Text("Most followed sport: \(sport.rawValue)")
                     .font(.caption)
                     .foregroundStyle(AppTheme.textSecondary)
             }
-            if let market = snapshot.hottestMarket {
-                Text("Most used market: \(market.rawValue)")
-                    .font(.caption)
-                    .foregroundStyle(AppTheme.textSecondary)
-            }
+            Text("\(snapshot.sportsCovered) sports · \(snapshot.fixtureCount) fixtures")
+                .font(.caption)
+                .foregroundStyle(AppTheme.textSecondary)
         }
         .padding(14)
         .cardStyle(elevated: true)
@@ -106,33 +102,5 @@ struct PerformanceDashboard: View {
         .padding(.vertical, 10)
         .background(AppTheme.surfaceElevated)
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-    }
-}
-
-struct SuggestedStakeHint: View {
-    let balance: Double
-    let odds: Double
-    let onApply: (Double) -> Void
-
-    private var suggestion: Double {
-        BankrollMath.suggestedStake(balance: balance, odds: odds)
-    }
-
-    var body: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Suggested stake")
-                    .font(.caption)
-                    .foregroundStyle(AppTheme.textSecondary)
-                Text(CurrencyFormatter.string(from: suggestion))
-                    .font(.subheadline.weight(.bold))
-            }
-            Spacer()
-            Button("Use") { onApply(suggestion) }
-                .buttonStyle(SecondaryButtonStyle())
-        }
-        .padding(12)
-        .background(AppTheme.accentMuted)
-        .clipShape(RoundedRectangle(cornerRadius: AppTheme.radiusM, style: .continuous))
     }
 }

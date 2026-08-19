@@ -28,95 +28,6 @@ struct StatusBadge: View {
     }
 }
 
-struct OutcomeBadge: View {
-    let outcome: BetOutcome
-
-    var body: some View {
-        Text(outcome.rawValue.uppercased())
-            .font(.caption2.weight(.bold))
-            .tracking(0.5)
-            .foregroundStyle(outcome.color)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(outcome.color.opacity(0.15))
-            .clipShape(Capsule())
-    }
-}
-
-struct BalanceBanner: View {
-    let balance: Double
-    var compact: Bool = false
-
-    var body: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "wallet.pass.fill")
-                .foregroundStyle(AppTheme.accent)
-            VStack(alignment: .leading, spacing: 2) {
-                if !compact {
-                    Text("Bankroll")
-                        .font(.caption2)
-                        .foregroundStyle(AppTheme.textSecondary)
-                }
-                Text(CurrencyFormatter.string(from: balance))
-                    .font(compact ? .subheadline.weight(.bold) : .headline.weight(.bold))
-                    .monospacedDigit()
-            }
-            Spacer(minLength: 0)
-        }
-        .padding(compact ? 10 : 14)
-        .cardStyle(elevated: true)
-    }
-}
-
-struct StakePresetChip: View {
-    let amount: Double
-    let isSelected: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            Text(amount >= 1 ? "\(Int(amount))" : String(format: "%.2f", amount))
-                .font(.subheadline.weight(.semibold))
-                .padding(.horizontal, 14)
-                .padding(.vertical, 8)
-                .background(isSelected ? AppTheme.accent : AppTheme.surfaceElevated)
-                .foregroundStyle(isSelected ? .white : AppTheme.textPrimary)
-                .clipShape(Capsule())
-                .overlay(
-                    Capsule().stroke(isSelected ? AppTheme.accent : AppTheme.border, lineWidth: 1)
-                )
-        }
-        .buttonStyle(.plain)
-    }
-}
-
-struct OddsButton: View {
-    let title: String
-    let price: Double
-    var isSelected: Bool = false
-    var isEnabled: Bool = true
-
-    var body: some View {
-        VStack(spacing: 6) {
-            Text(title)
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(isSelected ? .white.opacity(0.9) : AppTheme.textSecondary)
-            Text(String(format: "%.2f", price))
-                .font(.headline.monospacedDigit())
-                .foregroundStyle(isSelected ? .white : AppTheme.textPrimary)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 12)
-        .background(isSelected ? AppTheme.accent.opacity(0.9) : AppTheme.surfaceElevated)
-        .overlay(
-            RoundedRectangle(cornerRadius: AppTheme.radiusM, style: .continuous)
-                .stroke(isSelected ? AppTheme.accent : AppTheme.border, lineWidth: 1)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: AppTheme.radiusM, style: .continuous))
-        .opacity(isEnabled ? 1 : 0.45)
-    }
-}
-
 struct SportFilterBar: View {
     let selected: Sport?
     let onSelect: (Sport?) -> Void
@@ -205,19 +116,17 @@ struct StatCard: View {
     }
 }
 
-struct BalanceCard: View {
-    let balance: Double
-    let username: String
-    let levelTitle: String
-    let progress: Double
+struct ProfileHeaderCard: View {
+    let displayName: String
+    let favoriteSport: String
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(username)
+                    Text(displayName)
                         .font(.title2.weight(.bold))
-                    Text(levelTitle)
+                    Text(favoriteSport)
                         .font(.subheadline)
                         .foregroundStyle(AppTheme.textSecondary)
                 }
@@ -227,28 +136,16 @@ struct BalanceCard: View {
                     .foregroundStyle(.white.opacity(0.85))
             }
 
-            Text(CurrencyFormatter.string(from: balance))
-                .font(.system(size: 34, weight: .bold, design: .rounded))
-                .monospacedDigit()
+            Text("Match Journal")
+                .font(.system(size: 22, weight: .bold, design: .rounded))
 
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Level progress")
-                    .font(.caption)
-                    .foregroundStyle(.white.opacity(0.75))
-                GeometryReader { geo in
-                    ZStack(alignment: .leading) {
-                        Capsule().fill(.white.opacity(0.2))
-                        Capsule()
-                            .fill(Color.white)
-                            .frame(width: max(8, geo.size.width * progress))
-                    }
-                }
-                .frame(height: 8)
-            }
+            Text("Today’s predictions are ready")
+                .font(.caption)
+                .foregroundStyle(.white.opacity(0.75))
         }
         .foregroundStyle(.white)
         .padding(20)
-        .background(AppTheme.balanceGradient)
+        .background(AppTheme.headerCardGradient)
         .clipShape(RoundedRectangle(cornerRadius: AppTheme.radiusXL, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: AppTheme.radiusXL, style: .continuous)

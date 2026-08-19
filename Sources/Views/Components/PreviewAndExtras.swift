@@ -2,17 +2,16 @@ import SwiftUI
 import SwiftData
 
 struct CoachTipsCard: View {
-    let balance: Double
-    let pendingCount: Int
-    let netProfit: Double
+    let watchCount: Int
+    let liveCount: Int
 
-    private var tips: [DemoScenario] {
-        ScenarioCoach.activeScenarios(balance: balance, pendingCount: pendingCount, netProfit: netProfit)
+    private var tips: [CoachTip] {
+        ScenarioCoach.activeTips(watchCount: watchCount, liveCount: liveCount)
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            SectionHeader(title: "Coach tips", subtitle: "Session guidance for the demo bankroll")
+            SectionHeader(title: "Quick tips", subtitle: "Get more from Match Journal")
             ForEach(tips, id: \.title) { tip in
                 VStack(alignment: .leading, spacing: 4) {
                     Text(tip.title)
@@ -52,43 +51,8 @@ struct LeagueBadge: View {
     }
 }
 
-struct ImpliedProbabilityBar: View {
-    let cells: [OddsBoardBuilder.Cell]
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Implied probabilities")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(AppTheme.textSecondary)
-            ForEach(cells.prefix(4)) { cell in
-                HStack {
-                    Text(cell.type.shortCode)
-                        .font(.caption.weight(.bold))
-                        .frame(width: 44, alignment: .leading)
-                    GeometryReader { geo in
-                        ZStack(alignment: .leading) {
-                            Capsule().fill(AppTheme.surfaceElevated)
-                            Capsule()
-                                .fill(AppTheme.accent)
-                                .frame(width: max(6, geo.size.width * cell.implied))
-                        }
-                    }
-                    .frame(height: 8)
-                    Text(String(format: "%.0f%%", cell.implied * 100))
-                        .font(.caption2.monospacedDigit())
-                        .foregroundStyle(AppTheme.textSecondary)
-                        .frame(width: 36, alignment: .trailing)
-                }
-            }
-        }
-        .padding(12)
-        .cardStyle()
-    }
-}
-
 struct MatchQuickActions: View {
     let match: Match
-    var onBet: (BetType) -> Void
     var onStats: () -> Void
     var onToggleWatch: () -> Void
     var isWatched: Bool
@@ -104,15 +68,6 @@ struct MatchQuickActions: View {
                 Label(isWatched ? "Watching" : "Watch", systemImage: isWatched ? "star.fill" : "star")
             }
             .buttonStyle(SecondaryButtonStyle())
-
-            if match.status.isBettable, let type = BetType.marketTypes(for: match.sport).first {
-                Button {
-                    onBet(type)
-                } label: {
-                    Label("Bet", systemImage: "plus.circle.fill")
-                }
-                .buttonStyle(SecondaryButtonStyle())
-            }
         }
     }
 }
@@ -124,9 +79,6 @@ struct MatchQuickActions: View {
         date: Date(),
         sport: .soccer,
         status: .live,
-        homeOdds: 2.1,
-        awayOdds: 3.4,
-        drawOdds: 3.2,
         homeScore: 1,
         awayScore: 1,
         league: "Premier League",
@@ -140,26 +92,9 @@ struct MatchQuickActions: View {
         .screenBackground()
 }
 
-#Preview("Bet card") {
-    let match = Match(
-        homeTeam: "Lakers",
-        awayTeam: "Warriors",
-        date: Date(),
-        sport: .basketball,
-        status: .upcoming,
-        homeOdds: 1.9,
-        awayOdds: 1.95,
-        league: "NBA"
-    )
-    let bet = Bet(amount: 50, odds: 1.9, type: .homeWin, match: match)
-    return BetCard(bet: bet)
-        .padding()
-        .screenBackground()
-}
-
 #Preview("Onboarding") {
     OnboardingScreen()
-        .modelContainer(for: [UserProfile.self, Bet.self, Match.self], inMemory: true)
+        .modelContainer(for: [UserProfile.self, Match.self, MatchPick.self], inMemory: true)
 }
 
 #Preview("Help") {

@@ -114,19 +114,15 @@ struct AppNotification: Identifiable, Hashable {
     var isRead: Bool
 
     enum Kind: String, Hashable {
-        case betSettled
         case liveGoal
         case promo
         case system
-        case levelUp
 
         var icon: String {
             switch self {
-            case .betSettled: return "checkmark.seal.fill"
             case .liveGoal: return "soccerball"
             case .promo: return "gift.fill"
             case .system: return "gearshape.fill"
-            case .levelUp: return "star.fill"
             }
         }
     }

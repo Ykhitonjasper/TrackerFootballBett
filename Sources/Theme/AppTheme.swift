@@ -1,13 +1,13 @@
 import SwiftUI
 
-/// 1xBet-inspired dark navy + brand blue palette (visual style only).
+/// Dark navy + brand blue palette.
 enum AppTheme {
     /// Brand blue ≈ #1475E1
     static let accent = Color(red: 0.08, green: 0.46, blue: 0.88)
     static let accentBright = Color(red: 0.20, green: 0.58, blue: 1.00)
     static let accentMuted = Color(red: 0.08, green: 0.46, blue: 0.88).opacity(0.22)
 
-    /// Promo / odds highlight ≈ 1xBet yellow
+    /// Accent highlight
     static let highlight = Color(red: 0.98, green: 0.75, blue: 0.10)
 
     static let danger = Color(red: 0.92, green: 0.28, blue: 0.32)
@@ -62,7 +62,7 @@ enum AppTheme {
         )
     }
 
-    static var balanceGradient: LinearGradient {
+    static var headerCardGradient: LinearGradient {
         LinearGradient(
             colors: [
                 Color(red: 0.06, green: 0.18, blue: 0.42),

@@ -41,42 +41,41 @@ enum LeagueCatalog {
     }
 }
 
-enum DemoScenario {
-    case firstBet
-    case liveComeback
-    case bankrollRebuild
-    case rebuildDiscipline
+enum CoachTip {
+    case openDesk
+    case firstStar
+    case liveNow
+    case mixSports
 
     var title: String {
         switch self {
-        case .firstBet: return "First ticket"
-        case .liveComeback: return "Live comeback"
-        case .bankrollRebuild: return "Bankroll rebuild"
-        case .rebuildDiscipline: return "Steady recovery"
+        case .openDesk: return "Read predictions"
+        case .firstStar: return "Build a watchlist"
+        case .liveNow: return "Live scores"
+        case .mixSports: return "Switch sports"
         }
     }
 
     var tip: String {
         switch self {
-        case .firstBet:
-            return "Start with a featured soccer moneyline under 5% of bankroll."
-        case .liveComeback:
-            return "When a favorite trails live, look at double chance instead of chasing long moneylines."
-        case .bankrollRebuild:
-            return "After a losing streak, cut stake size and favor shorter prices."
-        case .rebuildDiscipline:
-            return "Consistency beats parlays when rebuilding after a downswing."
+        case .openDesk:
+            return "Start on the Predictions tab. Each card is a written forecast with a confidence pip."
+        case .firstStar:
+            return "Open a featured soccer fixture and tap the star to pin it under Profile."
+        case .liveNow:
+            return "Live games refresh the clock and score — start from the Live filter."
+        case .mixSports:
+            return "Use the sport chips to jump from soccer into NBA, tennis, or esports."
         }
     }
 }
 
 enum ScenarioCoach {
-    static func activeScenarios(balance: Double, pendingCount: Int, netProfit: Double) -> [DemoScenario] {
-        var scenarios: [DemoScenario] = []
-        if pendingCount == 0 { scenarios.append(.firstBet) }
-        if balance < 700 { scenarios.append(.bankrollRebuild) }
-        if netProfit < 0 { scenarios.append(.rebuildDiscipline) }
-        scenarios.append(.liveComeback)
-        return scenarios
+    static func activeTips(watchCount: Int, liveCount: Int) -> [CoachTip] {
+        var tips: [CoachTip] = [.openDesk]
+        if watchCount == 0 { tips.append(.firstStar) }
+        if liveCount > 0 { tips.append(.liveNow) }
+        tips.append(.mixSports)
+        return tips
     }
 }

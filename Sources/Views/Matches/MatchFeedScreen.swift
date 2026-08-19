@@ -11,7 +11,7 @@ struct MatchFeedScreen: View {
         Group {
             switch viewModel.state {
             case .idle, .loading:
-                ProgressView("Loading markets…")
+                ProgressView("Loading fixtures…")
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             case .empty:
                 EmptyStateView(
@@ -121,7 +121,7 @@ struct MatchFeedScreen: View {
         let up = matches.filter { $0.status == .upcoming }.count
         let done = matches.filter { $0.status == .finished }.count
         return HStack(spacing: 8) {
-            chip("\(matches.count) markets", AppTheme.accent)
+            chip("\(matches.count) fixtures", AppTheme.accent)
             chip("\(live) live", AppTheme.danger)
             chip("\(up) soon", AppTheme.highlight)
             chip("\(done) FT", AppTheme.textSecondary)
@@ -145,9 +145,9 @@ struct MatchFeedScreen: View {
             Image(systemName: "flame.fill")
                 .foregroundStyle(AppTheme.highlight)
             VStack(alignment: .leading, spacing: 2) {
-                Text("Boosted markets")
+                Text("Predictions")
                     .font(.caption.weight(.bold))
-                Text("Live soccer & esports cards updating now")
+                Text("Daily match result, both to score, and goal totals — open the Predictions tab")
                     .font(.caption2)
                     .foregroundStyle(AppTheme.textSecondary)
             }
@@ -171,7 +171,7 @@ struct MatchFeedScreen: View {
         guard !live.isEmpty else { return AnyView(EmptyView()) }
         return AnyView(
             VStack(alignment: .leading, spacing: 8) {
-                SectionHeader(title: "Live now", subtitle: "In-play prices")
+                SectionHeader(title: "Live now", subtitle: "In-play scores")
                     .padding(.horizontal, 16)
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
@@ -191,7 +191,7 @@ struct MatchFeedScreen: View {
                                         .font(.caption.weight(.semibold))
                                         .foregroundStyle(AppTheme.textSecondary)
                                         .lineLimit(1)
-                                    Text(String(format: "%.2f  %.2f", match.homeOdds, match.awayOdds))
+                                    Text(match.league.isEmpty ? match.sport.rawValue : match.league)
                                         .font(.caption2.monospacedDigit().weight(.bold))
                                         .foregroundStyle(AppTheme.accentBright)
                                 }
@@ -259,7 +259,7 @@ struct MatchFeedScreen: View {
 
     private var featuredSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            SectionHeader(title: "Featured", subtitle: "Top cards")
+            SectionHeader(title: "Featured", subtitle: "Top fixtures")
                 .padding(.horizontal, 16)
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
@@ -300,8 +300,8 @@ struct FeaturedMatchCard: View {
                     .font(.caption2.monospacedDigit())
                     .foregroundStyle(AppTheme.textSecondary)
                 Spacer()
-                Text(String(format: "%.2f", match.homeOdds))
-                    .font(.caption.bold().monospacedDigit())
+                Text(match.sport.shortLabel)
+                    .font(.caption.bold())
                     .foregroundStyle(AppTheme.accentBright)
             }
         }
@@ -347,30 +347,23 @@ struct MatchCard: View {
             }
 
             HStack(spacing: 6) {
-                oddsPill("1", match.homeOdds)
-                if match.sport.allowsDraw {
-                    oddsPill("X", match.drawOdds ?? 3.2)
+                Label(match.sport.rawValue, systemImage: match.sport.iconName)
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(match.sport.accentColor)
+                Spacer()
+                if let pick = match.primaryPick {
+                    Text(pick.market.title)
+                        .font(.caption2.weight(.bold))
+                        .foregroundStyle(AppTheme.accentBright)
+                } else if !match.venue.isEmpty {
+                    Text(match.venue)
+                        .font(.caption2)
+                        .foregroundStyle(AppTheme.textTertiary)
+                        .lineLimit(1)
                 }
-                oddsPill("2", match.awayOdds)
             }
         }
         .padding(10)
         .cardStyle()
-    }
-
-    private func oddsPill(_ title: String, _ value: Double) -> some View {
-        HStack {
-            Text(title)
-                .foregroundStyle(AppTheme.textSecondary)
-            Spacer()
-            Text(String(format: "%.2f", value))
-                .fontWeight(.bold)
-                .monospacedDigit()
-        }
-        .font(.caption2)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 6)
-        .background(AppTheme.surfaceElevated)
-        .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
     }
 }

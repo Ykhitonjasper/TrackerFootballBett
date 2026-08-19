@@ -35,7 +35,7 @@ enum TeamCatalog {
     static let esportsLeagues: [LeagueRoster] = [
         LeagueRoster(league: "CS2", teams: ["Natus Vincere", "Vitality", "G2", "FaZe", "Spirit", "MOUZ", "Complexity", "Heroic", "Cloud9", "Liquid"]),
         LeagueRoster(league: "LoL", teams: ["T1", "Gen.G", "JD Gaming", "Bilibili Gaming", "G2 Esports", "Fnatic", "Cloud9 LoL", "Team Liquid LoL", "Hanwha Life", "Dplus KIA"]),
-        LeagueRoster(league: "Dota 2", teams: ["Team Spirit", "OG", "Team Liquid", "PSG.LGD", "Xtreme Gaming", "BetBoom", "Gaimin Gladiators", "Tundra", "Falcons", "Aurora"]),
+        LeagueRoster(league: "Dota 2", teams: ["Team Spirit", "OG", "Team Liquid", "PSG.LGD", "Xtreme Gaming", "Entity", "Gaimin Gladiators", "Tundra", "Falcons", "Aurora"]),
     ]
 
     static func leagues(for sport: Sport) -> [LeagueRoster] {
@@ -103,31 +103,5 @@ extension TeamCatalog {
             .sorted()
             .prefix(limit)
             .map { $0 }
-    }
-
-    /// Deterministic pseudo-strength rating used by mock odds builders.
-    static func strengthRating(for team: String) -> Double {
-        let seed = team.unicodeScalars.reduce(0) { $0 &+ Int($1.value) }
-        let normalized = Double((seed % 45) + 55) / 100.0
-        return normalized
-    }
-
-    static func fairOdds(home: String, away: String, allowDraw: Bool) -> (home: Double, away: Double, draw: Double?) {
-        let hs = strengthRating(for: home)
-        let as_ = strengthRating(for: away)
-        let total = hs + as_
-        var homeProb = hs / total
-        var awayProb = as_ / total
-        var drawProb = 0.0
-        if allowDraw {
-            drawProb = 0.22 + abs(hs - as_) * 0.05
-            let scale = 1 - drawProb
-            homeProb *= scale
-            awayProb *= scale
-        }
-        let homeOdds = OddsCalculator.applyMargin(to: OddsCalculator.fromProbability(homeProb))
-        let awayOdds = OddsCalculator.applyMargin(to: OddsCalculator.fromProbability(awayProb))
-        let drawOdds = allowDraw ? OddsCalculator.applyMargin(to: OddsCalculator.fromProbability(drawProb)) : nil
-        return (homeOdds, awayOdds, drawOdds)
     }
 }

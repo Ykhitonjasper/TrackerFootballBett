@@ -24,31 +24,25 @@ struct ProfileScreen: View {
                 case .loaded(let user):
                     ScrollView {
                         VStack(spacing: 18) {
-                            BalanceCard(
-                                balance: user.balance,
-                                username: user.username,
-                                levelTitle: "Lv \(user.level) · \(user.displayLevelTitle)",
-                                progress: user.experienceProgress
+                            ProfileHeaderCard(
+                                displayName: user.displayName,
+                                favoriteSport: user.favoriteSport.rawValue
                             )
 
                             if let dashboard = viewModel.dashboard {
-                                PerformanceDashboard(snapshot: dashboard.snapshot, series: dashboard.series)
+                                FollowDashboard(snapshot: dashboard.snapshot, series: dashboard.series)
                             }
 
-                            CoachTipsCard(
-                                balance: user.balance,
-                                pendingCount: viewModel.dashboard?.snapshot.pendingCount ?? 0,
-                                netProfit: user.netProfit
-                            )
+                            CoachTipsCard(watchCount: viewModel.watchCount, liveCount: viewModel.liveCount)
 
-                            if !viewModel.recentTickets.isEmpty {
+                            if !viewModel.recentWatched.isEmpty {
                                 VStack(alignment: .leading, spacing: 8) {
-                                    SectionHeader(title: "Recent tickets", subtitle: "Jump back into My Bets")
-                                    ForEach(viewModel.recentTickets.prefix(4)) { bet in
+                                    SectionHeader(title: "Watching now", subtitle: "Jump back into starred fixtures")
+                                    ForEach(viewModel.recentWatched.prefix(4)) { match in
                                         NavigationLink {
-                                            BetDetailScreen(bet: bet)
+                                            MatchDetailScreen(match: match)
                                         } label: {
-                                            BetCard(bet: bet)
+                                            MatchCard(match: match)
                                         }
                                         .buttonStyle(.plain)
                                     }
@@ -56,12 +50,10 @@ struct ProfileScreen: View {
                             }
 
                             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
-                                StatCard(title: "Total Bets", value: "\(viewModel.totalBetsPlaced)", icon: "ticket.fill")
-                                StatCard(title: "Win Rate", value: String(format: "%.0f%%", viewModel.winRate), icon: "chart.line.uptrend.xyaxis")
-                                StatCard(title: "Net Profit", value: CurrencyFormatter.compact(from: user.netProfit), icon: "dollarsign.circle.fill", tint: user.netProfit >= 0 ? AppTheme.accent : AppTheme.danger)
-                                StatCard(title: "Best Win", value: CurrencyFormatter.compact(from: viewModel.bestWin), icon: "flame.fill", tint: .orange)
-                                StatCard(title: "Win Streak", value: "\(viewModel.currentStreak)", icon: "bolt.fill", tint: .cyan)
-                                StatCard(title: "Avg Odds", value: String(format: "%.2f", viewModel.avgOdds), icon: "number")
+                                StatCard(title: "Watching", value: "\(viewModel.watchCount)", icon: "star.fill")
+                                StatCard(title: "Open", value: "\(viewModel.openPicks)", icon: "lightbulb.fill", tint: AppTheme.highlight)
+                                StatCard(title: "Landed", value: "\(viewModel.hitPicks)", icon: "checkmark.circle.fill", tint: AppTheme.success)
+                                StatCard(title: "Live now", value: "\(viewModel.liveCount)", icon: "bolt.fill", tint: AppTheme.danger)
                                 StatCard(title: "Favorite", value: user.favoriteSport.shortLabel, icon: user.favoriteSport.iconName, tint: user.favoriteSport.accentColor)
                             }
 
@@ -70,7 +62,7 @@ struct ProfileScreen: View {
                             } label: {
                                 HStack {
                                     Image(systemName: "questionmark.circle.fill")
-                                    Text("How TrackerFootballBett works")
+                                    Text("How Match Journal works")
                                         .fontWeight(.semibold)
                                     Spacer()
                                     Image(systemName: "chevron.right")
@@ -160,10 +152,7 @@ struct ProfileScreen: View {
                 SettingsScreen(viewModel: viewModel)
             }
             .task { viewModel.load(context: context) }
-            .onReceive(NotificationCenter.default.publisher(for: .trackerBetBetPlaced)) { _ in
-                viewModel.load(context: context)
-            }
-            .onReceive(NotificationCenter.default.publisher(for: .trackerBetSettled)) { _ in
+            .onReceive(NotificationCenter.default.publisher(for: .trackerBetDataReset)) { _ in
                 viewModel.load(context: context)
             }
         }
@@ -193,21 +182,22 @@ struct SettingsScreen: View {
                         ))
                     }
 
-                    Section("Account") {
-                        LabeledContent("Username", value: user.username)
+                    Section("Profile") {
+                        LabeledContent("Display name", value: user.displayName)
                         LabeledContent("Member since", value: DateFormatters.shortDate.string(from: user.createdAt))
-                        LabeledContent("Starting bankroll", value: CurrencyFormatter.string(from: user.startingBalance))
+                        LabeledContent("Favorite sport", value: user.favoriteSport.rawValue)
                     }
                 }
 
                 Section("Legal") {
                     Link("Privacy Policy", destination: LegalLinks.privacy)
                     Link("Terms of Use", destination: LegalLinks.terms)
+                    Link("Upcoming updates", destination: LegalLinks.updates)
                     Link("Support", destination: LegalLinks.support)
                 }
 
-                Section("Demo") {
-                    Button("Reset demo data", role: .destructive) {
+                Section("Data") {
+                    Button("Reload fixtures", role: .destructive) {
                         confirmReset = true
                     }
                     Button("Delete all data", role: .destructive) {
@@ -217,8 +207,8 @@ struct SettingsScreen: View {
 
                 Section("About") {
                     LabeledContent("Version", value: "1.0.0")
-                    LabeledContent("Build", value: "4")
-                    Text("TrackerFootballBett is a paper-betting simulation. No real-money gambling, deposits, or payouts.")
+                    LabeledContent("Build", value: "8")
+                    Text("Match Journal is a local match journal with live scores, form, and a personal watchlist. Everything stays on this device.")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
@@ -230,24 +220,24 @@ struct SettingsScreen: View {
                     Button("Done") { dismiss() }
                 }
             }
-            .confirmationDialog("Reset all demo data?", isPresented: $confirmReset, titleVisibility: .visible) {
-                Button("Reset", role: .destructive) {
-                    viewModel.resetDemo(context: context)
+            .confirmationDialog("Reload the fixture slate?", isPresented: $confirmReset, titleVisibility: .visible) {
+                Button("Reload", role: .destructive) {
+                    viewModel.resetLocalData(context: context)
                 }
                 Button("Cancel", role: .cancel) {}
             } message: {
-                Text("This restores the starter bankroll, clears bets, and reloads match fixtures.")
+                Text("This restores the fixture slate and a local profile.")
             }
             .confirmationDialog("Delete all local data?", isPresented: $confirmDeleteAll, titleVisibility: .visible) {
                 Button("Delete Everything", role: .destructive) {
-                    viewModel.resetDemo(context: context)
+                    viewModel.resetLocalData(context: context)
                     WatchlistStore.save([])
                     hasCompletedOnboarding = false
                     dismiss()
                 }
                 Button("Cancel", role: .cancel) {}
             } message: {
-                Text("Clears tickets, fixtures, watchlist and returns you to onboarding.")
+                Text("Clears fixtures, watchlist and returns you to onboarding.")
             }
         }
     }

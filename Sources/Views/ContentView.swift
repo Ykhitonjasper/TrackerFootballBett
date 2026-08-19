@@ -15,9 +15,11 @@ struct ContentView: View {
                 .tabItem { Label("Matches", systemImage: "sportscourt.fill") }
                 .tag(0)
 
-                MyBetsScreen()
-                    .tabItem { Label("My Bets", systemImage: "ticket.fill") }
-                    .tag(1)
+                NavigationStack {
+                    PicksBoardScreen()
+                }
+                .tabItem { Label("Predictions", systemImage: "lightbulb.fill") }
+                .tag(1)
 
                 ProfileScreen()
                     .tabItem { Label("Profile", systemImage: "person.crop.circle.fill") }
@@ -40,5 +42,5 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
-        .modelContainer(for: [UserProfile.self, Bet.self, Match.self], inMemory: true)
+        .modelContainer(for: [UserProfile.self, Match.self, MatchPick.self], inMemory: true)
 }

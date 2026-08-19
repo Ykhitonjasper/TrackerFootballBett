@@ -1,128 +1,52 @@
 import Foundation
 
-/// Lightweight analytics + history helpers for the demo app.
-enum PerformanceAnalytics {
+/// Fixture mix and watchlist helpers for the companion feed.
+enum FollowAnalytics {
     struct Snapshot: Hashable {
-        var betsPlaced: Int
-        var winCount: Int
-        var lossCount: Int
-        var cashOutCount: Int
-        var pendingCount: Int
-        var totalStaked: Double
-        var totalReturned: Double
-        var netProfit: Double
-        var averageOdds: Double
-        var averageStake: Double
-        var roi: Double
-        var bestSport: Sport?
-        var hottestMarket: BetType?
-
-        var winRate: Double {
-            let settled = winCount + lossCount
-            guard settled > 0 else { return 0 }
-            return Double(winCount) / Double(settled)
-        }
+        var fixtureCount: Int
+        var liveCount: Int
+        var upcomingCount: Int
+        var finishedCount: Int
+        var watchedCount: Int
+        var sportsCovered: Int
+        var topSport: Sport?
     }
 
-    static func snapshot(from bets: [Bet]) -> Snapshot {
-        let win = bets.filter { $0.outcome == .won }
-        let loss = bets.filter { $0.outcome == .lost }
-        let cash = bets.filter { $0.outcome == .cashedOut }
-        let pending = bets.filter { $0.outcome == .pending }
-
-        let staked = bets.reduce(0.0) { $0 + $1.amount }
-        let returned = bets.reduce(0.0) { partial, bet in
-            switch bet.outcome {
-            case .won: return partial + bet.potentialPayout
-            case .cashedOut: return partial + (bet.cashOutValue ?? 0)
-            case .void: return partial + bet.amount
-            default: return partial
-            }
-        }
-        let net = bets.reduce(0.0) { $0 + $1.realizedProfit }
-        let avgOdds = bets.isEmpty ? 0 : bets.reduce(0.0) { $0 + $1.odds } / Double(bets.count)
-        let avgStake = bets.isEmpty ? 0 : staked / Double(bets.count)
-        let roi = staked == 0 ? 0 : net / staked
+    static func snapshot(all: [Match], watched: [Match]) -> Snapshot {
+        let sports = Set(all.map(\.sport))
+        let watchedSports = Dictionary(grouping: watched, by: \.sport)
+        let top = watchedSports.max(by: { $0.value.count < $1.value.count })?.key
+            ?? Dictionary(grouping: all, by: \.sport).max(by: { $0.value.count < $1.value.count })?.key
 
         return Snapshot(
-            betsPlaced: bets.count,
-            winCount: win.count,
-            lossCount: loss.count,
-            cashOutCount: cash.count,
-            pendingCount: pending.count,
-            totalStaked: staked,
-            totalReturned: returned,
-            netProfit: net,
-            averageOdds: avgOdds,
-            averageStake: avgStake,
-            roi: roi,
-            bestSport: bestSport(in: bets),
-            hottestMarket: hottestMarket(in: bets)
+            fixtureCount: all.count,
+            liveCount: all.filter { $0.status == .live }.count,
+            upcomingCount: all.filter { $0.status == .upcoming }.count,
+            finishedCount: all.filter { $0.status == .finished }.count,
+            watchedCount: watched.count,
+            sportsCovered: sports.count,
+            topSport: top
         )
     }
 
-    static func profitSeries(from bets: [Bet], days: Int = 14) -> [(date: Date, profit: Double)] {
+    static func fixtureSeries(from matches: [Match], days: Int = 7) -> [(date: Date, count: Int)] {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
-        var running = 0.0
-        var series: [(Date, Double)] = []
-
+        var series: [(Date, Int)] = []
         for offset in (0..<days).reversed() {
             guard let day = calendar.date(byAdding: .day, value: -offset, to: today) else { continue }
-            let dayBets = bets.filter { calendar.isDate($0.settledAt ?? $0.datePlaced, inSameDayAs: day) }
-            running += dayBets.reduce(0) { $0 + $1.realizedProfit }
-            series.append((day, running))
+            let count = matches.filter { calendar.isDate($0.date, inSameDayAs: day) }.count
+            series.append((day, count))
         }
         return series
     }
 
-    static func sportBreakdown(from bets: [Bet]) -> [(sport: Sport, staked: Double, profit: Double, count: Int)] {
-        var map: [Sport: (Double, Double, Int)] = [:]
-        for bet in bets {
-            guard let sport = bet.match?.sport else { continue }
-            let current = map[sport] ?? (0, 0, 0)
-            map[sport] = (current.0 + bet.amount, current.1 + bet.realizedProfit, current.2 + 1)
-        }
-        return map
-            .map { (sport: $0.key, staked: $0.value.0, profit: $0.value.1, count: $0.value.2) }
-            .sorted { $0.staked > $1.staked }
-    }
-
-    private static func bestSport(in bets: [Bet]) -> Sport? {
-        sportBreakdown(from: bets)
-            .filter { $0.count >= 1 }
-            .max(by: { $0.profit < $1.profit })?
-            .sport
-    }
-
-    private static func hottestMarket(in bets: [Bet]) -> BetType? {
-        var counts: [BetType: Int] = [:]
-        for bet in bets {
-            counts[bet.type, default: 0] += 1
-        }
-        return counts.max(by: { $0.value < $1.value })?.key
-    }
-}
-
-enum BankrollMath {
-    static func kellyFraction(odds: Double, winProbability: Double) -> Double {
-        guard odds > 1, winProbability > 0, winProbability < 1 else { return 0 }
-        let b = odds - 1
-        let q = 1 - winProbability
-        let fraction = (b * winProbability - q) / b
-        return max(0, min(0.25, fraction))
-    }
-
-    static func suggestedStake(balance: Double, odds: Double, estimatedEdge: Double = 0.03) -> Double {
-        let fairProb = OddsCalculator.impliedProbability(odds) + estimatedEdge
-        let fraction = kellyFraction(odds: odds, winProbability: min(0.85, fairProb))
-        let raw = balance * fraction
-        return max(5, min(balance * 0.2, (raw * 100).rounded() / 100))
-    }
-
-    static func units(stake: Double, baseUnit: Double = 10) -> Double {
-        guard baseUnit > 0 else { return 0 }
-        return (stake / baseUnit * 10).rounded() / 10
+    static func sportBreakdown(from matches: [Match]) -> [(sport: Sport, count: Int, live: Int)] {
+        Dictionary(grouping: matches, by: \.sport)
+            .map { sport, items in
+                (sport: sport, count: items.count, live: items.filter { $0.status == .live }.count)
+            }
+            .sorted { $0.count > $1.count }
     }
 }
 
@@ -139,34 +63,33 @@ enum MatchInsightEngine {
     static func insights(for match: Match) -> [Insight] {
         var items: [Insight] = []
 
-        let homeImplied = OddsCalculator.impliedProbability(match.homeOdds)
-        let awayImplied = OddsCalculator.impliedProbability(match.awayOdds)
-
-        if homeImplied > awayImplied + 0.08 {
-            items.append(Insight(title: "Home favored", detail: "\(match.homeTeam) carries the sharper price side of this market.", sentiment: .positive))
-        } else if awayImplied > homeImplied + 0.08 {
-            items.append(Insight(title: "Away favored", detail: "\(match.awayTeam) is priced as the more likely winner.", sentiment: .positive))
+        if match.status == .upcoming {
+            items.append(Insight(title: "Kickoff ahead", detail: "\(match.homeTeam) hosts \(match.awayTeam) at \(match.clockLabel).", sentiment: .neutral))
+        } else if match.homeScore > match.awayScore {
+            items.append(Insight(title: "Home ahead", detail: "\(match.homeTeam) leads \(match.scoreLine).", sentiment: .positive))
+        } else if match.awayScore > match.homeScore {
+            items.append(Insight(title: "Away ahead", detail: "\(match.awayTeam) leads \(match.scoreLine).", sentiment: .positive))
         } else {
-            items.append(Insight(title: "Toss-up pricing", detail: "Moneyline prices are relatively balanced.", sentiment: .neutral))
+            items.append(Insight(title: "Level score", detail: "The sides are tied at \(match.scoreLine).", sentiment: .neutral))
         }
 
         if match.status == .live {
-            items.append(Insight(title: "Live volatility", detail: "In-play odds can swing quickly as the clock advances.", sentiment: .caution))
+            items.append(Insight(title: "Live clock", detail: "This fixture is in play. Scores and minutes refresh on a short timer.", sentiment: .caution))
             if abs(match.homeScore - match.awayScore) >= 2 {
-                items.append(Insight(title: "Score gap", detail: "Double-chance or totals markets may offer better value than the moneyline.", sentiment: .neutral))
+                items.append(Insight(title: "Score gap", detail: "One side has a clear lead on the current scoreboard.", sentiment: .neutral))
             }
         }
 
+        if match.status == .finished {
+            items.append(Insight(title: "Full time", detail: "Final result is locked. Open stats for the full comparison.", sentiment: .neutral))
+        }
+
         if match.isFeatured {
-            items.append(Insight(title: "Featured fixture", detail: "Higher liquidity and public attention usually mean sharper lines.", sentiment: .neutral))
+            items.append(Insight(title: "Featured fixture", detail: "Pinned because this matchup draws extra attention on the slate.", sentiment: .neutral))
         }
 
         if match.popularity >= 90 {
-            items.append(Insight(title: "High interest", detail: "Expect heavier betting volume on this card.", sentiment: .positive))
-        }
-
-        if match.sport.allowsDraw, let draw = match.drawOdds, draw < 3.1 {
-            items.append(Insight(title: "Draw in play", detail: "Draw odds are relatively short for this matchup.", sentiment: .caution))
+            items.append(Insight(title: "High interest", detail: "This card is among the most followed fixtures in the feed.", sentiment: .positive))
         }
 
         return items

@@ -7,7 +7,7 @@ struct TrackerBetApp: App {
         WindowGroup {
             ContentView()
                 .preferredColorScheme(.dark)
-                .modelContainer(for: [UserProfile.self, Bet.self, Match.self])
+                .modelContainer(for: [UserProfile.self, Match.self, MatchPick.self])
         }
     }
 }

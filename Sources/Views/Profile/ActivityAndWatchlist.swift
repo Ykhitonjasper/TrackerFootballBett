@@ -8,7 +8,7 @@ struct ActivityFeedScreen: View {
     var body: some View {
         List {
             if items.isEmpty {
-                Text("Place or settle bets to build your activity feed.")
+                Text("Follow live and finished fixtures to fill this feed.")
                     .foregroundStyle(.secondary)
             } else {
                 ForEach(items) { item in
@@ -33,13 +33,12 @@ struct ActivityFeedScreen: View {
         }
         .navigationTitle("Activity")
         .task { reload() }
-        .onReceive(NotificationCenter.default.publisher(for: .trackerBetBetPlaced)) { _ in reload() }
-        .onReceive(NotificationCenter.default.publisher(for: .trackerBetSettled)) { _ in reload() }
+        .onReceive(NotificationCenter.default.publisher(for: .trackerBetDataReset)) { _ in reload() }
     }
 
     private func reload() {
-        let bets = (try? BetRepository().fetchAll(context: context)) ?? []
-        items = ActivityBuilder.build(from: bets)
+        let matches = (try? MatchRepository().fetchAll(context: context)) ?? []
+        items = ActivityBuilder.build(from: matches)
     }
 }
 
@@ -53,31 +52,53 @@ struct ActivityItem: Identifiable, Hashable {
 }
 
 enum ActivityBuilder {
-    static func build(from bets: [Bet]) -> [ActivityItem] {
+    static func build(from matches: [Match]) -> [ActivityItem] {
         var items: [ActivityItem] = []
 
-        for bet in bets {
-            items.append(
-                ActivityItem(
-                    id: UUID(),
-                    title: "Bet placed",
-                    detail: "\(bet.matchTitle) · \(CopyFactory.betSummary(bet))",
-                    date: bet.datePlaced,
-                    icon: "ticket.fill",
-                    tint: AppTheme.info
-                )
-            )
-
-            if let settled = bet.settledAt {
-                let won = bet.outcome == .won
+        for match in matches {
+            switch match.status {
+            case .live:
                 items.append(
                     ActivityItem(
-                        id: UUID(),
-                        title: bet.outcome.rawValue,
-                        detail: CopyFactory.settlementBlurb(won: won || bet.outcome == .cashedOut, payout: bet.outcome == .cashedOut ? (bet.cashOutValue ?? 0) : bet.potentialPayout),
-                        date: settled,
-                        icon: won ? "checkmark.circle.fill" : (bet.outcome == .cashedOut ? "arrow.down.circle.fill" : "xmark.circle.fill"),
-                        tint: won ? AppTheme.accent : (bet.outcome == .cashedOut ? AppTheme.warning : AppTheme.danger)
+                        id: match.id,
+                        title: "Live · \(match.league.isEmpty ? match.sport.rawValue : match.league)",
+                        detail: "\(match.displayName) · \(match.scoreLine) · \(match.clockLabel)",
+                        date: match.date,
+                        icon: "bolt.fill",
+                        tint: AppTheme.danger
+                    )
+                )
+            case .finished:
+                items.append(
+                    ActivityItem(
+                        id: match.id,
+                        title: "Full time",
+                        detail: "\(match.displayName) finished \(match.scoreLine)",
+                        date: match.date,
+                        icon: "flag.checkered",
+                        tint: AppTheme.accent
+                    )
+                )
+            case .upcoming:
+                items.append(
+                    ActivityItem(
+                        id: match.id,
+                        title: "Upcoming",
+                        detail: CopyFactory.matchSubtitle(match),
+                        date: match.date,
+                        icon: "clock.fill",
+                        tint: AppTheme.info
+                    )
+                )
+            case .postponed:
+                items.append(
+                    ActivityItem(
+                        id: match.id,
+                        title: "Postponed",
+                        detail: match.displayName,
+                        date: match.date,
+                        icon: "pause.circle.fill",
+                        tint: AppTheme.warning
                     )
                 )
             }
@@ -89,7 +110,7 @@ enum ActivityBuilder {
 
 struct SportBreakdownScreen: View {
     @Environment(\.modelContext) private var context
-    @State private var rows: [(sport: Sport, staked: Double, profit: Double, count: Int)] = []
+    @State private var rows: [(sport: Sport, count: Int, live: Int)] = []
 
     var body: some View {
         List {
@@ -105,22 +126,19 @@ struct SportBreakdownScreen: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(row.sport.rawValue)
                                 .font(.subheadline.weight(.semibold))
-                            Text("\(row.count) bets · staked \(CurrencyFormatter.compact(from: row.staked))")
+                            Text("\(row.count) fixtures · \(row.live) live")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
                         Spacer()
-                        Text(CurrencyFormatter.compact(from: row.profit))
-                            .font(.subheadline.weight(.bold).monospacedDigit())
-                            .foregroundStyle(row.profit >= 0 ? AppTheme.accent : AppTheme.danger)
                     }
                 }
             }
         }
         .navigationTitle("By sport")
         .task {
-            let bets = (try? BetRepository().fetchAll(context: context)) ?? []
-            rows = PerformanceAnalytics.sportBreakdown(from: bets)
+            let matches = (try? MatchRepository().fetchAll(context: context)) ?? []
+            rows = FollowAnalytics.sportBreakdown(from: matches)
         }
     }
 }
@@ -163,24 +181,28 @@ struct WatchlistScreen: View {
     @State private var matches: [Match] = []
 
     var body: some View {
-        List {
+        Group {
             if matches.isEmpty {
-                Text("Star matches from the detail screen to build a watchlist.")
-                    .foregroundStyle(.secondary)
+                EmptyStateView(
+                    title: "Nothing starred yet",
+                    systemImage: "star",
+                    message: "Open a fixture and tap the star to keep it here."
+                )
             } else {
-                ForEach(matches) { match in
-                    NavigationLink(value: match) {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(match.displayName)
-                                .font(.subheadline.weight(.semibold))
-                            Text(CopyFactory.matchSubtitle(match))
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                ScrollView {
+                    LazyVStack(spacing: 8) {
+                        ForEach(matches) { match in
+                            NavigationLink(value: match) {
+                                MatchCard(match: match)
+                            }
+                            .buttonStyle(.plain)
                         }
                     }
+                    .padding(16)
                 }
             }
         }
+        .screenBackground()
         .navigationTitle("Watchlist")
         .navigationDestination(for: Match.self) { MatchDetailScreen(match: $0) }
         .task { reload() }

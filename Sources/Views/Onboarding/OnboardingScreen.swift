@@ -6,7 +6,7 @@ struct OnboardingScreen: View {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
 
     @State private var step = 0
-    @State private var username = ""
+    @State private var displayNameInput = ""
     @State private var favoriteSport: Sport = .soccer
     @State private var appear = false
 
@@ -53,20 +53,20 @@ struct OnboardingScreen: View {
                 .scaleEffect(appear ? 1 : 0.8)
                 .opacity(appear ? 1 : 0)
 
-            Text("TrackerFootballBett")
+            Text("Match Journal")
                 .font(.system(size: 32, weight: .bold, design: .rounded))
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 12)
 
-            Text("Track live scores and place paper bets with a demo bankroll — no real money involved.")
+            Text("Daily predictions, live scores, and a personal watchlist — all on this device.")
                 .font(.body)
                 .foregroundStyle(AppTheme.textSecondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 28)
 
-            featureRow(icon: "sportscourt.fill", title: "Multi-sport feed", subtitle: "Soccer, NBA, tennis, NHL, esports")
-            featureRow(icon: "bolt.fill", title: "Live simulation", subtitle: "Scores and markets evolve in real time")
-            featureRow(icon: "chart.bar.fill", title: "Personal stats", subtitle: "Track P/L, streaks, and ticket history")
+            featureRow(icon: "lightbulb.fill", title: "Predictions", subtitle: "Match result, both to score, and goal totals")
+            featureRow(icon: "bolt.fill", title: "Live scores", subtitle: "Clocks and results update as games run")
+            featureRow(icon: "star.fill", title: "Watchlist", subtitle: "Star fixtures you want to follow")
             Spacer()
         }
     }
@@ -74,15 +74,15 @@ struct OnboardingScreen: View {
     private var profileStep: some View {
         VStack(alignment: .leading, spacing: 20) {
             Spacer()
-            Text("Create your profile")
+            Text("Set a display name")
                 .font(.title.bold())
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            Text("Username")
+            Text("Display name")
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(AppTheme.textSecondary)
 
-            TextField("At least 3 characters", text: $username)
+            TextField("At least 3 characters", text: $displayNameInput)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
                 .padding()
@@ -131,7 +131,7 @@ struct OnboardingScreen: View {
                 .foregroundStyle(AppTheme.accent)
             Text("You're set, \(displayName)")
                 .font(.title.bold())
-            Text("Starting bankroll: \(CurrencyFormatter.string(from: 1000))\nFavorite: \(favoriteSport.rawValue)")
+            Text("Favorite sport: \(favoriteSport.rawValue)")
                 .multilineTextAlignment(.center)
                 .foregroundStyle(AppTheme.textSecondary)
             Spacer()
@@ -148,21 +148,21 @@ struct OnboardingScreen: View {
                 .buttonStyle(SecondaryButtonStyle())
             }
 
-            Button(step == steps.count - 1 ? "Start betting" : "Continue") {
+            Button(step == steps.count - 1 ? "Open Match Journal" : "Continue") {
                 if step < steps.count - 1 {
-                    if step == 1 && !Validation.username(username) { return }
+                    if step == 1 && !Validation.displayName(displayNameInput) { return }
                     withAnimation { step += 1 }
                 } else {
                     finish()
                 }
             }
-            .buttonStyle(PrimaryButtonStyle(isEnabled: step != 1 || Validation.username(username)))
-            .disabled(step == 1 && !Validation.username(username))
+            .buttonStyle(PrimaryButtonStyle(isEnabled: step != 1 || Validation.displayName(displayNameInput)))
+            .disabled(step == 1 && !Validation.displayName(displayNameInput))
         }
     }
 
     private var displayName: String {
-        let trimmed = username.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmed = displayNameInput.trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty ? "player" : trimmed
     }
 
@@ -185,8 +185,7 @@ struct OnboardingScreen: View {
         existing.forEach { modelContext.delete($0) }
 
         let profile = UserProfile(
-            balance: 1000,
-            username: username.trimmingCharacters(in: .whitespacesAndNewlines),
+            displayName: displayNameInput.trimmingCharacters(in: .whitespacesAndNewlines),
             favoriteSport: favoriteSport
         )
         modelContext.insert(profile)

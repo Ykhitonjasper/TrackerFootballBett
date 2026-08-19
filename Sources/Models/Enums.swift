@@ -69,70 +69,8 @@ enum MatchStatus: String, Codable, CaseIterable, Identifiable, Hashable {
         }
     }
 
-    var isBettable: Bool {
+    var isActive: Bool {
         self == .upcoming || self == .live
-    }
-}
-
-enum BetOutcome: String, Codable, CaseIterable, Identifiable, Hashable {
-    case won = "Won"
-    case lost = "Lost"
-    case pending = "Pending"
-    case void = "Void"
-    case cashedOut = "Cashed Out"
-
-    var id: String { rawValue }
-
-    var color: Color {
-        switch self {
-        case .won: return AppTheme.accentBright
-        case .lost: return AppTheme.danger
-        case .pending: return AppTheme.highlight
-        case .void: return .gray
-        case .cashedOut: return AppTheme.info
-        }
-    }
-
-    var isSettled: Bool {
-        self != .pending
-    }
-}
-
-enum BetType: String, Codable, CaseIterable, Identifiable, Hashable {
-    case homeWin = "Home Win"
-    case awayWin = "Away Win"
-    case draw = "Draw"
-    case over = "Over 2.5"
-    case under = "Under 2.5"
-    case bothTeamsScore = "BTTS"
-    case homeOrDraw = "1X"
-    case awayOrDraw = "X2"
-
-    var id: String { rawValue }
-
-    var shortCode: String {
-        switch self {
-        case .homeWin: return "1"
-        case .awayWin: return "2"
-        case .draw: return "X"
-        case .over: return "O2.5"
-        case .under: return "U2.5"
-        case .bothTeamsScore: return "BTTS"
-        case .homeOrDraw: return "1X"
-        case .awayOrDraw: return "X2"
-        }
-    }
-
-    static func marketTypes(for sport: Sport) -> [BetType] {
-        var types: [BetType] = [.homeWin, .awayWin]
-        if sport.allowsDraw {
-            types.insert(.draw, at: 1)
-            types.append(contentsOf: [.homeOrDraw, .awayOrDraw])
-        }
-        if sport == .soccer || sport == .hockey {
-            types.append(contentsOf: [.over, .under, .bothTeamsScore])
-        }
-        return types
     }
 }
 
@@ -154,11 +92,76 @@ enum FeedStatusFilter: String, CaseIterable, Identifiable {
     }
 }
 
+enum PickLean: String, Codable, CaseIterable, Identifiable, Hashable {
+    case home = "Home"
+    case away = "Away"
+    case draw = "Draw"
+
+    var id: String { rawValue }
+
+    var shortLabel: String {
+        switch self {
+        case .home: return "1"
+        case .away: return "2"
+        case .draw: return "X"
+        }
+    }
+}
+
+enum PickMarket: String, Codable, CaseIterable, Identifiable, Hashable {
+    case oneXTwo = "Match Result"
+    case homeOrDraw = "Home or Draw"
+    case awayOrDraw = "Away or Draw"
+    case bothScore = "Both to Score"
+    case overTwoFive = "Over 2.5 Goals"
+    case underTwoFive = "Under 2.5 Goals"
+
+    var id: String { rawValue }
+
+    var title: String { rawValue }
+
+    var codeTag: String {
+        switch self {
+        case .oneXTwo: return "MR"
+        case .homeOrDraw: return "HD"
+        case .awayOrDraw: return "AD"
+        case .bothScore: return "BS"
+        case .overTwoFive: return "O25"
+        case .underTwoFive: return "U25"
+        }
+    }
+
+    static func deskMarkets(for sport: Sport) -> [PickMarket] {
+        var items: [PickMarket] = [.oneXTwo]
+        if sport.allowsDraw {
+            items.append(contentsOf: [.homeOrDraw, .awayOrDraw, .bothScore, .overTwoFive, .underTwoFive])
+        }
+        return items
+    }
+}
+
+enum PickResult: String, Codable, CaseIterable, Identifiable, Hashable {
+    case open = "Open"
+    case hit = "Landed"
+    case miss = "Missed"
+    case void = "Void"
+
+    var id: String { rawValue }
+}
+
+enum PickBoardFilter: String, CaseIterable, Identifiable {
+    case today = "Today"
+    case open = "Open"
+    case settled = "Settled"
+    case all = "All"
+
+    var id: String { rawValue }
+}
+
 enum SortOption: String, CaseIterable, Identifiable {
     case kickoff = "Kickoff"
-    case oddsLow = "Odds ↑"
-    case oddsHigh = "Odds ↓"
     case popularity = "Popular"
+    case league = "League"
 
     var id: String { rawValue }
 }
